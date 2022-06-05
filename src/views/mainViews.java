@@ -8,6 +8,12 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.PreparedStatement;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 /**
  *
  * @author Bagus Sr
@@ -15,7 +21,8 @@ import java.sql.PreparedStatement;
 public class mainViews extends javax.swing.JFrame {
 
     ResultSet result = null;
-    PreparedStatement pst = null; 
+    PreparedStatement pst = null;
+    
 //    Connection conn = null;
 
     /**
@@ -26,11 +33,125 @@ public class mainViews extends javax.swing.JFrame {
      */
     public mainViews() {
         initComponents();
+        ListSelectionModel cell = tableEdit.getSelectionModel();
+        cell.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        validasiTambah.setVisible(false);
         combo.addItem("Buka untuk Memilih");
         updateCombo();
+        getTableObat();
+        
+        cell.addListSelectionListener((ListSelectionEvent e) -> {
+            String selectedData = null;
+            
+            int[] selectedRow = tableEdit.getSelectedRows();
+            int[] selectedColumns = tableEdit.getSelectedColumns();
+            
+            for (int i = 0; i < selectedRow.length; i++) {
+                for (int j = 0; j < selectedColumns.length; j++) {
+                    selectedData = (String) tableEdit.getValueAt(selectedRow[i], selectedColumns[j]);
+                }
+            }
+            getObatId(selectedData);
+        });
+        
+        DocumentListener dl;
+        dl = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateTotal();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateTotal();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateTotal();
+            }
+            protected void updateTotal(){
+                if(!qtyObat.getText().equals("")){
+                    int total = (Integer.parseInt(qtyObat.getText())*(Integer.parseInt(harga.getText())));
+                    total_.setText(Integer.toString(total));
+                }
+            }
+        };
+        qtyObat.getDocument().addDocumentListener(dl);
     }
 
 // Dropwdon Database 
+    
+    private void getObatId(String x){
+        String sql = String.format("SELECT * FROM obat WHERE id = '%s'", x);
+        try {
+            Connection koneksi = conn.getConn();
+            Statement query = koneksi.createStatement();
+            result = query.executeQuery(sql);
+            while(result.next()){
+                idObatEdit.setText(result.getString("id"));
+                namaObatEdit.setText(result.getString("nama"));
+                merkObatEdit.setText(result.getString("merk"));
+                hargaObatEdit.setText(result.getString("harga"));
+                stokObatEdit.setText(result.getString("stok"));
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
+    private void getTableObat(){
+            String sql = String.format("SELECT * FROM obat");
+            int counter= 1;
+        try {
+            DefaultTableModel table = new DefaultTableModel();
+            table.addColumn("No");
+            table.addColumn("Id");
+            table.addColumn("Nama obat");
+            table.addColumn("Merk");
+            table.addColumn("Harga");
+            table.addColumn("Stok");
+            Connection koneksi = conn.getConn();
+            Statement query = koneksi.createStatement();
+            result = query.executeQuery(sql);
+            while(result.next()){
+                table.addRow(new Object[]{
+                counter++, result.getString("id"),result.getString("nama"),result.getString("merk"), result.getString("harga"), result.getString("stok")           
+                });
+                }
+            tableEdit.setModel(table);
+            tableBarang.setModel(table);
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void getTableOrder(){
+        String sql = String.format("SELECT * FROM orders");
+            int counter= 1;
+        try {
+            DefaultTableModel table = new DefaultTableModel();
+            table.addColumn("No");
+            table.addColumn("Id");
+            table.addColumn("tanggal");
+            table.addColumn("IdObat");
+            table.addColumn("Qty");
+            table.addColumn("Total");
+            Connection koneksi = conn.getConn();
+            Statement query = koneksi.createStatement();
+            result = query.executeQuery(sql);
+            while(result.next()){
+                table.addRow(new Object[]{
+                counter++, result.getString("id"),result.getString("tanggal"),result.getString("id_obat"), result.getString("qty"), result.getString("total")           
+                });
+                }
+            tableOrder.setModel(table);
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     private void updateCombo(){
         String sql = String.format("SELECT * FROM obat");
@@ -44,7 +165,21 @@ public class mainViews extends javax.swing.JFrame {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-}
+    }
+    
+    private void emptyTambah(){
+        idObat.setText("");
+        namaObat.setText("");
+        merkObat.setText("");
+        hargaObat.setText("");
+    }
+    
+    private void emptyOrder(){
+        id_obat.setText("");
+        nama_obat.setText("");
+        merk_obat.setText("");
+        qtyObat.setText("");
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -57,9 +192,9 @@ public class mainViews extends javax.swing.JFrame {
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tableBarang = new javax.swing.JTable();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTable2 = new javax.swing.JTable();
+        tableOrder = new javax.swing.JTable();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
@@ -72,11 +207,11 @@ public class mainViews extends javax.swing.JFrame {
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
+        validasiTambah = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
-        jTable3 = new javax.swing.JTable();
+        tableEdit = new javax.swing.JTable();
         jLabel7 = new javax.swing.JLabel();
-        idField = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         idObatEdit = new javax.swing.JTextField();
         jLabel9 = new javax.swing.JLabel();
@@ -87,8 +222,8 @@ public class mainViews extends javax.swing.JFrame {
         hargaObatEdit = new javax.swing.JTextField();
         jLabel12 = new javax.swing.JLabel();
         stokObatEdit = new javax.swing.JTextField();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        update = new javax.swing.JButton();
+        delete = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         jLabel13 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
@@ -101,10 +236,19 @@ public class mainViews extends javax.swing.JFrame {
         qtyObat = new javax.swing.JTextField();
         tambahOrder = new javax.swing.JButton();
         combo = new javax.swing.JComboBox<>();
+        jLabel18 = new javax.swing.JLabel();
+        total_ = new javax.swing.JLabel();
+        harga = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                jTabbedPane1KeyPressed(evt);
+            }
+        });
+
+        tableBarang.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -126,21 +270,37 @@ public class mainViews extends javax.swing.JFrame {
             new String [] {
                 "No", "Id", "Nama Obat", "Merk", "Harga", "Stok"
             }
-        ));
-        jScrollPane1.setViewportView(jTable1);
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
 
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(tableBarang);
+
+        tableOrder.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
             },
             new String [] {
-                "Id", "Tanggal", "Rincian", "Total"
+                "No", "Id", "Tanggal", "IdObat", "Qty", "Total"
             }
-        ));
-        jScrollPane2.setViewportView(jTable2);
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane2.setViewportView(tableOrder);
 
         jLabel1.setText("Tabel Barang");
 
@@ -170,7 +330,7 @@ public class mainViews extends javax.swing.JFrame {
                     .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addGap(39, 39, 39))
         );
@@ -205,22 +365,33 @@ public class mainViews extends javax.swing.JFrame {
 
         jLabel6.setText("Harga Obat");
 
+        validasiTambah.setBackground(new java.awt.Color(255, 204, 204));
+        validasiTambah.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        validasiTambah.setForeground(new java.awt.Color(0, 204, 0));
+        validasiTambah.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        validasiTambah.setText("Data Berhasil Ditambah");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(35, 35, 35)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(hargaObat, javax.swing.GroupLayout.PREFERRED_SIZE, 626, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(merkObat)
-                    .addComponent(namaObat, javax.swing.GroupLayout.DEFAULT_SIZE, 672, Short.MAX_VALUE)
-                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(tambahObat, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(idObat, javax.swing.GroupLayout.PREFERRED_SIZE, 681, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(35, 35, 35)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(hargaObat, javax.swing.GroupLayout.PREFERRED_SIZE, 626, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(merkObat)
+                            .addComponent(namaObat, javax.swing.GroupLayout.DEFAULT_SIZE, 672, Short.MAX_VALUE)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(tambahObat, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(idObat, javax.swing.GroupLayout.PREFERRED_SIZE, 681, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(306, 306, 306)
+                        .addComponent(validasiTambah, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(173, Short.MAX_VALUE))
         );
 
@@ -229,7 +400,9 @@ public class mainViews extends javax.swing.JFrame {
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(36, 36, 36)
+                .addGap(8, 8, 8)
+                .addComponent(validasiTambah)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(idObat, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -254,8 +427,20 @@ public class mainViews extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Tambah Obat", jPanel2);
 
-        jTable3.setModel(new javax.swing.table.DefaultTableModel(
+        tableEdit.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -264,18 +449,26 @@ public class mainViews extends javax.swing.JFrame {
             new String [] {
                 "No", "Id ", "Nama Obat", "Merk", "Harga", "Stok"
             }
-        ));
-        jScrollPane3.setViewportView(jTable3);
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane3.setViewportView(tableEdit);
 
         jLabel7.setText("Data Obat");
 
-        idField.addActionListener(new java.awt.event.ActionListener() {
+        jLabel8.setText("Id");
+
+        idObatEdit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                idFieldActionPerformed(evt);
+                idObatEditActionPerformed(evt);
             }
         });
-
-        jLabel8.setText("Id");
 
         jLabel9.setText("Nama Obat");
 
@@ -303,11 +496,21 @@ public class mainViews extends javax.swing.JFrame {
             }
         });
 
-        jButton2.setBackground(new java.awt.Color(153, 255, 153));
-        jButton2.setText("Update");
+        update.setBackground(new java.awt.Color(153, 255, 153));
+        update.setText("Update");
+        update.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                updateActionPerformed(evt);
+            }
+        });
 
-        jButton3.setBackground(new java.awt.Color(255, 102, 102));
-        jButton3.setText("Delete");
+        delete.setBackground(new java.awt.Color(255, 102, 102));
+        delete.setText("Delete");
+        delete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -316,10 +519,7 @@ public class mainViews extends javax.swing.JFrame {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGap(21, 21, 21)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addGap(209, 209, 209)
-                        .addComponent(idField, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel7)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 465, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
@@ -336,9 +536,9 @@ public class mainViews extends javax.swing.JFrame {
                             .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(stokObatEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addComponent(jButton2)
+                                .addComponent(update)
                                 .addGap(18, 18, 18)
-                                .addComponent(jButton3))))))
+                                .addComponent(delete))))))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {hargaObatEdit, idObatEdit, merkObatEdit, namaObatEdit, stokObatEdit});
@@ -346,10 +546,8 @@ public class mainViews extends javax.swing.JFrame {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel7)
-                    .addComponent(idField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(22, Short.MAX_VALUE)
+                .addComponent(jLabel7)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 403, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -375,8 +573,8 @@ public class mainViews extends javax.swing.JFrame {
                         .addComponent(stokObatEdit, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton2)
-                            .addComponent(jButton3))))
+                            .addComponent(update)
+                            .addComponent(delete))))
                 .addGap(28, 28, 28))
         );
 
@@ -426,6 +624,16 @@ public class mainViews extends javax.swing.JFrame {
             }
         });
 
+        jLabel18.setText("Total :");
+
+        total_.setText("0");
+
+        harga.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                hargaActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -451,10 +659,17 @@ public class mainViews extends javax.swing.JFrame {
                                     .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel16, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(tambahOrder))
-                                .addGap(0, 313, Short.MAX_VALUE)))))
-                .addGap(267, 267, 267))
+                                    .addComponent(jLabel16, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addComponent(tambahOrder)
+                                .addGap(182, 182, 182)
+                                .addComponent(jLabel18, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(total_, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                .addGap(27, 27, 27)
+                .addComponent(harga, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(169, 169, 169))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -478,10 +693,15 @@ public class mainViews extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel17)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(qtyObat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(qtyObat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(harga, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(tambahOrder)
-                .addContainerGap(163, Short.MAX_VALUE))
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(tambahOrder)
+                    .addComponent(jLabel18)
+                    .addComponent(total_))
+                .addContainerGap(172, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Penjualan", jPanel4);
@@ -510,8 +730,12 @@ public class mainViews extends javax.swing.JFrame {
             merk = merkObat.getText();
             harga = hargaObat.getText();
             Integer.parseInt(harga);
-            String sql = String.format("INSERT INTO obat values ('%s', '%s', '%s', '%s')", id, nama, merk, harga);
+            String sql = String.format("INSERT INTO obat values ('%s', '%s', '%s', '%s', 0)", id, nama, merk, harga);
             query.executeUpdate(sql);
+            validasiTambah.setVisible(true);
+            getTableObat();
+            updateCombo();
+            emptyTambah();
         } catch (SQLException ex) {
             Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -529,24 +753,22 @@ public class mainViews extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_stokObatEditActionPerformed
 
-    private void idFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_idFieldActionPerformed
-
     private void tambahOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tambahOrderActionPerformed
         // TODO add your handling code here:
         try {
             // TODO add your handling code here:
             Connection koneksi = conn.getConn();
-            String nama, merk, id, qty;
+            String  id, qty, total;
             Statement query = koneksi.createStatement();
             id = idObat.getText();
-            nama = namaObat.getText();
-            merk = merkObat.getText();
             qty = qtyObat.getText();
+            total = total_.getText();
             Integer.parseInt(qty);
-            String sql = String.format("INSERT INTO obat values ('%s', '%s', '%s', '%s')", id, nama, merk, qty);
-            query.executeUpdate(sql);
+            String sql = String.format("INSERT INTO orders (id_obat, tanggal, total, qty) values ('%s', now(), '%s', '%s')", id, total, qty);
+            query.execute(sql);
+            getTableOrder();
+            updateCombo();
+            emptyOrder();
         } catch (SQLException ex) {
             Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -564,6 +786,7 @@ public class mainViews extends javax.swing.JFrame {
                 id_obat.setText(result.getString("id"));
                 nama_obat.setText(result.getString("nama"));
                 merk_obat.setText(result.getString("merk"));
+                harga.setText(result.getString("harga"));
             }
                     } catch (SQLException ex) {
             Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
@@ -577,26 +800,62 @@ public class mainViews extends javax.swing.JFrame {
 //Get Data Dari Dropdown (Belum Berhasil)
 
     private void comboPopupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent evt) {//GEN-FIRST:event_comboPopupMenuWillBecomeInvisible
-        String item = (String)combo.getSelectedItem();
-        String sql_select = String.format("SELECT * FROM orders WHERE nama = ?");
 
+    }//GEN-LAST:event_comboPopupMenuWillBecomeInvisible
+
+    private void jTabbedPane1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTabbedPane1KeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTabbedPane1KeyPressed
+
+    private void idObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idObatEditActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_idObatEditActionPerformed
+
+    private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
+        String id, nama, merk, harga, stok;
+        id = idObatEdit.getText();
+        nama = namaObatEdit.getText();
+        merk = merkObatEdit.getText();
+        harga = hargaObatEdit.getText();
+        stok = stokObatEdit.getText();
+        Integer.parseInt(stok);
+        Integer.parseInt(harga);
+        String sql = String.format("UPDATE obat SET nama = '%s', merk = '%s', harga = '%s', stok = '%s' WHERE id = '%s'",nama, merk, harga, stok, id);
         try {
+            // TODO add your handling code here:
             Connection koneksi = conn.getConn();
             Statement query = koneksi.createStatement();
-//            pst =  (PreparedStatement) query.executeQuery(sql_select);
-            pst = (PreparedStatement) conn.createStatement(sql_select);
-            pst.setString(1, item);
-            result = pst.executeQuery();
-            
-            if(result.next()){
-                id_obat.setText(result.getString("id_obat"));
-                nama_obat.setText(result.getString("nama"));
-                merk_obat.setText(result.getString("merk"));
-                qtyObat.setText(result.getString("qty"));
-            }
-        } catch (Exception e) {
+            query.executeUpdate(sql);
+            getTableObat();
+            updateCombo();
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_comboPopupMenuWillBecomeInvisible
+        
+       
+        
+    }//GEN-LAST:event_updateActionPerformed
+
+    private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
+        // TODO add your handling code here:
+        String id;
+        id = idObatEdit.getText();
+        String sql = String.format("DELETE FROM obat WHERE id = '%s'", id);
+        try {
+            // TODO add your handling code here:
+            Connection koneksi = conn.getConn();
+            Statement query = koneksi.createStatement();
+            query.executeUpdate(sql);
+            getTableObat();
+            updateCombo();
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_deleteActionPerformed
+
+    private void hargaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hargaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_hargaActionPerformed
 
     /**
      * @param args the command line arguments
@@ -629,21 +888,21 @@ public class mainViews extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new mainViews().setVisible(true);
-                idField.setVisible(false);
+                harga.setVisible(false);
+                
             }
         });
     }
     koneksi conn = new koneksi();
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> combo;
+    private javax.swing.JButton delete;
+    private static javax.swing.JTextField harga;
     private javax.swing.JTextField hargaObat;
     private javax.swing.JTextField hargaObatEdit;
-    public static javax.swing.JTextField idField;
     private javax.swing.JTextField idObat;
     private javax.swing.JTextField idObatEdit;
     private javax.swing.JTextField id_obat;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -653,6 +912,7 @@ public class mainViews extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -669,9 +929,6 @@ public class mainViews extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTable jTable2;
-    private javax.swing.JTable jTable3;
     private javax.swing.JTextField merkObat;
     private javax.swing.JTextField merkObatEdit;
     private javax.swing.JTextField merk_obat;
@@ -680,7 +937,13 @@ public class mainViews extends javax.swing.JFrame {
     private javax.swing.JTextField nama_obat;
     private javax.swing.JTextField qtyObat;
     private javax.swing.JTextField stokObatEdit;
+    private javax.swing.JTable tableBarang;
+    private javax.swing.JTable tableEdit;
+    private javax.swing.JTable tableOrder;
     private javax.swing.JButton tambahObat;
     private javax.swing.JButton tambahOrder;
+    private javax.swing.JLabel total_;
+    private javax.swing.JButton update;
+    private javax.swing.JLabel validasiTambah;
     // End of variables declaration//GEN-END:variables
 }
