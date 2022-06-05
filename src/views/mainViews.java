@@ -26,19 +26,14 @@ public class mainViews extends javax.swing.JFrame {
      */
     public mainViews() {
         initComponents();
+        combo.addItem("Buka untuk Memilih");
         updateCombo();
-//        item.removeAllItems();
-//        String[] items = {"Buka Untuk Memilih", "paracemtamol"};
-//        int a = items.length;
-//        for(int i =0; i<a; i++){
-//            item.addItem(items[i]);
-//        }
     }
 
 // Dropwdon Database 
 
     private void updateCombo(){
-        String sql = String.format("SELECT * FROM orders");
+        String sql = String.format("SELECT * FROM obat");
         try {
             Connection koneksi = conn.getConn();
             Statement query = koneksi.createStatement();
@@ -46,7 +41,8 @@ public class mainViews extends javax.swing.JFrame {
             while(result.next()){
                 combo.addItem(result.getString("nama"));
         }
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
 }
     /**
@@ -100,7 +96,7 @@ public class mainViews extends javax.swing.JFrame {
         nama_obat = new javax.swing.JTextField();
         id_obat = new javax.swing.JTextField();
         jLabel16 = new javax.swing.JLabel();
-        merk = new javax.swing.JTextField();
+        merk_obat = new javax.swing.JTextField();
         jLabel17 = new javax.swing.JLabel();
         qtyObat = new javax.swing.JTextField();
         tambahOrder = new javax.swing.JButton();
@@ -157,7 +153,7 @@ public class mainViews extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 418, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(188, 188, 188)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -174,9 +170,9 @@ public class mainViews extends javax.swing.JFrame {
                     .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 404, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 404, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addGap(39, 39, 39))
         );
 
         jTabbedPane1.addTab("Data", jPanel1);
@@ -399,7 +395,7 @@ public class mainViews extends javax.swing.JFrame {
 
         jLabel16.setText("Merk");
 
-        merk.setEditable(false);
+        merk_obat.setEditable(false);
 
         jLabel17.setText("Qty");
 
@@ -444,7 +440,7 @@ public class mainViews extends javax.swing.JFrame {
                         .addGap(219, 219, 219)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(qtyObat, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(merk, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(merk_obat, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(nama_obat)
                             .addGroup(jPanel4Layout.createSequentialGroup()
                                 .addComponent(id_obat)
@@ -478,7 +474,7 @@ public class mainViews extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel16)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(merk, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(merk_obat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel17)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -507,14 +503,14 @@ public class mainViews extends javax.swing.JFrame {
         try {
             // TODO add your handling code here:
             Connection koneksi = conn.getConn();
-            String nama, merk, id, qty;
+            String nama, merk, id, harga;
             Statement query = koneksi.createStatement();
             id = idObat.getText();
             nama = namaObat.getText();
             merk = merkObat.getText();
-            qty = qtyObat.getText();
-            Integer.parseInt(qty);
-            String sql = String.format("INSERT INTO obat values ('%s', '%s', '%s', '%s')", id, nama, merk, qty);
+            harga = hargaObat.getText();
+            Integer.parseInt(harga);
+            String sql = String.format("INSERT INTO obat values ('%s', '%s', '%s', '%s')", id, nama, merk, harga);
             query.executeUpdate(sql);
         } catch (SQLException ex) {
             Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
@@ -557,7 +553,21 @@ public class mainViews extends javax.swing.JFrame {
     }//GEN-LAST:event_tambahOrderActionPerformed
 
     private void comboItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_comboItemStateChanged
-        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            Connection koneksi = conn.getConn();
+            Statement query = koneksi.createStatement();
+            String item = combo.getSelectedItem().toString();
+            String sql = String.format("SELECT * FROM obat where nama = '%s'", item);
+            result = query.executeQuery(sql);
+            while(result.next()){
+                id_obat.setText(result.getString("id"));
+                nama_obat.setText(result.getString("nama"));
+                merk_obat.setText(result.getString("merk"));
+            }
+                    } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_comboItemStateChanged
 
     private void comboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboActionPerformed
@@ -581,7 +591,7 @@ public class mainViews extends javax.swing.JFrame {
             if(result.next()){
                 id_obat.setText(result.getString("id_obat"));
                 nama_obat.setText(result.getString("nama"));
-                merk.setText(result.getString("merk"));
+                merk_obat.setText(result.getString("merk"));
                 qtyObat.setText(result.getString("qty"));
             }
         } catch (Exception e) {
@@ -662,9 +672,9 @@ public class mainViews extends javax.swing.JFrame {
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
     private javax.swing.JTable jTable3;
-    private javax.swing.JTextField merk;
     private javax.swing.JTextField merkObat;
     private javax.swing.JTextField merkObatEdit;
+    private javax.swing.JTextField merk_obat;
     private javax.swing.JTextField namaObat;
     private javax.swing.JTextField namaObatEdit;
     private javax.swing.JTextField nama_obat;

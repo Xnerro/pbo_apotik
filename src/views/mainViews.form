@@ -46,8 +46,8 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jScrollPane1" pref="465" max="32767" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jScrollPane2" min="-2" pref="418" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <Component id="jScrollPane2" pref="418" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="188" max="-2" attributes="0"/>
@@ -66,12 +66,12 @@
                           <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane2" min="-2" pref="404" max="-2" attributes="0"/>
-                          <Component id="jScrollPane1" alignment="0" min="-2" pref="404" max="-2" attributes="0"/>
+                          <Component id="jScrollPane2" pref="404" max="32767" attributes="0"/>
+                          <Component id="jScrollPane1" alignment="0" pref="0" max="32767" attributes="0"/>
                       </Group>
-                      <EmptySpace max="32767" attributes="0"/>
+                      <EmptySpace min="-2" pref="39" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -549,7 +549,7 @@
                               <EmptySpace min="-2" pref="219" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="qtyObat" alignment="1" max="32767" attributes="0"/>
-                                  <Component id="merk" alignment="1" max="32767" attributes="0"/>
+                                  <Component id="merk_obat" alignment="1" max="32767" attributes="0"/>
                                   <Component id="nama_obat" alignment="0" max="32767" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="id_obat" max="32767" attributes="0"/>
@@ -592,7 +592,7 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel16" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="merk" min="-2" max="-2" attributes="0"/>
+                      <Component id="merk_obat" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel17" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -638,7 +638,7 @@
                 <Property name="text" type="java.lang.String" value="Merk"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JTextField" name="merk">
+            <Component class="javax.swing.JTextField" name="merk_obat">
               <Properties>
                 <Property name="editable" type="boolean" value="false"/>
               </Properties>

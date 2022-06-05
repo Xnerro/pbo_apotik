@@ -153,10 +153,7 @@ public class Login extends javax.swing.JFrame {
                     String username, password;
                     username = username_login.getText();
                     password = password_login.getText();
-                    boolean check = new Login().checkUsers(username, password);
-                    if(check){
-                        new mainViews().setVisible(true);
-                    }
+                    checkUsers(username, password);
                 } catch (SQLException ex) {
                     Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -170,35 +167,28 @@ public class Login extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public boolean checkUsers(String x, String y) throws SQLException{
+    public void checkUsers(String x, String y) throws SQLException{
                 Connection koneksi = conn.getConn();
                 Statement query = koneksi.createStatement();
                 String sql_username = String.format("SELECT * FROM users WHERE username ='%s'", x);
                 String sql_all = String.format("SELECT * FROM users WHERE username ='%s' and password = '%s'", x, y);
                 ResultSet resUsername, resall;
-                do{
-                    resUsername = query.executeQuery(sql_username);
-                    if(resUsername.first()){
-                        do{
-                            resall = query.executeQuery(sql_all);
-                            if(resall.first()){
-                            System.out.println("masuk");
-                            return true;
-                            }
-                            else{
-                                validasi.setVisible(true);
-                                validasi.setText("Password Anda Salah");
-                                return false;
-                            }
-                        }
-                        while(!resall.first());
+                resUsername = query.executeQuery(sql_username);
+                if(resUsername.first()){
+                    resall = query.executeQuery(sql_all);
+                    if(resall.first()){
+                        this.setVisible(false);
+                        new mainViews().setVisible(true);
                     }
                     else{
                         validasi.setVisible(true);
-                        validasi.setText("Username anda tidak ditemukan");
+                        validasi.setText("Password anda salah");
                     }
-                }while(!resUsername.first());
-                return false;
+                }
+                else{
+                    validasi.setVisible(true);
+                    validasi.setText("Username anda tidak ditemukan");
+                }
             }
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
