@@ -4,6 +4,8 @@
  */
 package pbo.apotik;
 import Form.Login;
+import pbo.apotik.koneksi;
+import java.sql.*;
 
 /**
  *
@@ -14,9 +16,20 @@ public class PBOApotik {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {    
+    public static void main(String[] args) throws SQLException {    
         Login lg = new Login();
-        lg.setVisible(true);
+        Connection conn = new koneksi().getConn();
+        Statement query = conn.createStatement();
+        String sql = "SELECT * FROM users";
+        ResultSet result;
+        result = query.executeQuery(sql);
+        if(result.first()){
+            lg.setVisible(true);
+        } else {
+            String add = "INSERT INTO users (username, password) VALUES ('admin', 'admin')";
+            query.execute(add);
+            lg.setVisible(true);
+        }
     }
     
 }

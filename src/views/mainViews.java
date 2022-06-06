@@ -10,10 +10,10 @@ import java.util.logging.Logger;
 import java.sql.PreparedStatement;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import Form.Login;
 /**
  *
  * @author Bagus Sr
@@ -33,12 +33,15 @@ public class mainViews extends javax.swing.JFrame {
      */
     public mainViews() {
         initComponents();
+        harga.setVisible(false);
+        stok_.setVisible(false);
+        labelStok.setVisible(false);
         ListSelectionModel cell = tableEdit.getSelectionModel();
         cell.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         validasiTambah.setVisible(false);
-        combo.addItem("Buka untuk Memilih");
         updateCombo();
         getTableObat();
+        getTableOrder();
         
         cell.addListSelectionListener((ListSelectionEvent e) -> {
             String selectedData = null;
@@ -155,6 +158,8 @@ public class mainViews extends javax.swing.JFrame {
 
     private void updateCombo(){
         String sql = String.format("SELECT * FROM obat");
+        combo.removeAllItems();
+        combo.addItem("Buka untuk Memilih");
         try {
             Connection koneksi = conn.getConn();
             Statement query = koneksi.createStatement();
@@ -179,7 +184,36 @@ public class mainViews extends javax.swing.JFrame {
         nama_obat.setText("");
         merk_obat.setText("");
         qtyObat.setText("");
+        labelStok.setVisible(false);
     }
+    
+   private void updateStok(String a, int x) throws SQLException{
+       String sql = String.format("UPDATE obat SET stok = '%s' WHERE id = '%s'", x, a);
+       Connection koneksi = conn.getConn();
+       Statement query = koneksi.createStatement();
+       query.executeUpdate(sql);
+  
+   }
+   
+   private boolean checkStok(String a, int x) throws SQLException{
+       String sql = String.format("SELECT stok FROM obat WHERE id = '%s'", a);
+       Connection koneksi = conn.getConn();
+       Statement query = koneksi.createStatement();
+       result = query.executeQuery(sql);
+       while(result.next()){
+           if(result.getString("stok").equals("0")){
+                return false;
+           } else {
+                if((Integer.parseInt(result.getString("stok"))) - x > 0 ){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+       }
+       return false;
+   }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -239,14 +273,27 @@ public class mainViews extends javax.swing.JFrame {
         jLabel18 = new javax.swing.JLabel();
         total_ = new javax.swing.JLabel();
         harga = new javax.swing.JTextField();
+        stok_ = new javax.swing.JTextField();
+        labelStok = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Apotik Sejahtera");
+        setBackground(new java.awt.Color(255, 255, 255));
 
+        jTabbedPane1.setBackground(new java.awt.Color(255, 255, 255));
+        jTabbedPane1.setTabPlacement(javax.swing.JTabbedPane.LEFT);
+        jTabbedPane1.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                jTabbedPane1FocusGained(evt);
+            }
+        });
         jTabbedPane1.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 jTabbedPane1KeyPressed(evt);
             }
         });
+
+        jPanel1.setBackground(new java.awt.Color(0, 200, 243));
 
         tableBarang.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -311,9 +358,9 @@ public class mainViews extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 383, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(188, 188, 188)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -330,16 +377,23 @@ public class mainViews extends javax.swing.JFrame {
                     .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addGap(39, 39, 39))
         );
 
         jTabbedPane1.addTab("Data", jPanel1);
 
+        jPanel2.setBackground(new java.awt.Color(0, 200, 243));
+
         idObat.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 idObatActionPerformed(evt);
+            }
+        });
+        idObat.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                idObatKeyTyped(evt);
             }
         });
 
@@ -392,7 +446,7 @@ public class mainViews extends javax.swing.JFrame {
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGap(306, 306, 306)
                         .addComponent(validasiTambah, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(173, Short.MAX_VALUE))
+                .addContainerGap(102, Short.MAX_VALUE))
         );
 
         jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {hargaObat, idObat, merkObat, namaObat});
@@ -420,12 +474,14 @@ public class mainViews extends javax.swing.JFrame {
                 .addComponent(hargaObat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(tambahObat, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(159, Short.MAX_VALUE))
+                .addContainerGap(164, Short.MAX_VALUE))
         );
 
         jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {hargaObat, idObat, merkObat, namaObat});
 
         jTabbedPane1.addTab("Tambah Obat", jPanel2);
+
+        jPanel3.setBackground(new java.awt.Color(0, 200, 243));
 
         tableEdit.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -464,6 +520,7 @@ public class mainViews extends javax.swing.JFrame {
 
         jLabel8.setText("Id");
 
+        idObatEdit.setEditable(false);
         idObatEdit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 idObatEditActionPerformed(evt);
@@ -546,7 +603,7 @@ public class mainViews extends javax.swing.JFrame {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap(22, Short.MAX_VALUE)
+                .addContainerGap(27, Short.MAX_VALUE)
                 .addComponent(jLabel7)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -580,6 +637,8 @@ public class mainViews extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Edit dan Delete", jPanel3);
 
+        jPanel4.setBackground(new java.awt.Color(0, 200, 243));
+
         jLabel13.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         jLabel13.setText("Order");
 
@@ -596,6 +655,12 @@ public class mainViews extends javax.swing.JFrame {
         merk_obat.setEditable(false);
 
         jLabel17.setText("Qty");
+
+        qtyObat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                qtyObatActionPerformed(evt);
+            }
+        });
 
         tambahOrder.setText("Order");
         tambahOrder.addActionListener(new java.awt.event.ActionListener() {
@@ -634,6 +699,13 @@ public class mainViews extends javax.swing.JFrame {
             }
         });
 
+        stok_.setText("0");
+
+        labelStok.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        labelStok.setForeground(new java.awt.Color(255, 51, 51));
+        labelStok.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelStok.setText("Stok Habis");
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -643,7 +715,7 @@ public class mainViews extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
                         .addGap(411, 411, 411)
                         .addComponent(jLabel13)
-                        .addGap(0, 149, Short.MAX_VALUE))
+                        .addGap(0, 78, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
                         .addGap(219, 219, 219)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -668,8 +740,14 @@ public class mainViews extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(total_, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                 .addGap(27, 27, 27)
-                .addComponent(harga, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(harga, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(stok_, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(169, 169, 169))
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addGap(287, 287, 287)
+                .addComponent(labelStok, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -691,7 +769,9 @@ public class mainViews extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(merk_obat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel17)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel17)
+                    .addComponent(stok_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(qtyObat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -701,23 +781,159 @@ public class mainViews extends javax.swing.JFrame {
                     .addComponent(tambahOrder)
                     .addComponent(jLabel18)
                     .addComponent(total_))
-                .addContainerGap(172, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(labelStok, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(128, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Penjualan", jPanel4);
 
-        getContentPane().add(jTabbedPane1, java.awt.BorderLayout.PAGE_START);
+        getContentPane().add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void idObatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idObatActionPerformed
+    private void jTabbedPane1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTabbedPane1KeyPressed
         // TODO add your handling code here:
-    }//GEN-LAST:event_idObatActionPerformed
+    }//GEN-LAST:event_jTabbedPane1KeyPressed
 
-    private void namaObatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_namaObatActionPerformed
+    private void jTabbedPane1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTabbedPane1FocusGained
         // TODO add your handling code here:
-    }//GEN-LAST:event_namaObatActionPerformed
+        this.setVisible(false);
+        new Login().setVisible(true);
+    }//GEN-LAST:event_jTabbedPane1FocusGained
+
+    private void hargaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hargaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_hargaActionPerformed
+
+    private void comboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_comboActionPerformed
+
+//Get Data Dari Dropdown (Belum Berhasil)
+
+    private void comboPopupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent evt) {//GEN-FIRST:event_comboPopupMenuWillBecomeInvisible
+
+    }//GEN-LAST:event_comboPopupMenuWillBecomeInvisible
+
+    private void comboItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_comboItemStateChanged
+        try {
+            // TODO add your handling code here:
+            if(combo.getItemCount() != 0){
+                Connection koneksi = conn.getConn();
+                Statement query = koneksi.createStatement();
+                String item = combo.getSelectedItem().toString();
+                String sql = String.format("SELECT * FROM obat where nama = '%s'", item);
+                result = query.executeQuery(sql);
+                while(result.next()){
+                    id_obat.setText(result.getString("id"));
+                    nama_obat.setText(result.getString("nama"));
+                    merk_obat.setText(result.getString("merk"));
+                    harga.setText(result.getString("harga"));
+                    stok_.setText(result.getString("stok"));
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_comboItemStateChanged
+
+    private void tambahOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tambahOrderActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            Connection koneksi = conn.getConn();
+            String  id, qty, total, stok;
+            int a;
+            Statement query = koneksi.createStatement();
+            id = id_obat.getText();
+            qty = qtyObat.getText();
+            total = total_.getText();
+            stok = stok_.getText();
+            a = (Integer.parseInt(stok)) - (Integer.parseInt(qty));
+            if(checkStok(id, Integer.parseInt(qty)) ){
+                updateStok(id, a);
+                String sql = String.format("INSERT INTO orders (tanggal, id_obat, qty, total) values (now(),'%s', '%s', '%s')", id, qty, total);
+                query.execute(sql);
+                getTableOrder();
+                getTableObat();
+                combo.removeAllItems();
+                combo.addItem("Buka untuk Memilih");
+                updateCombo();
+                emptyOrder();
+            }
+            else{
+                labelStok.setVisible(true);
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_tambahOrderActionPerformed
+
+    private void qtyObatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_qtyObatActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_qtyObatActionPerformed
+
+    private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
+        // TODO add your handling code here:
+        String id;
+        id = idObatEdit.getText();
+        String sql = String.format("DELETE FROM obat WHERE id = '%s'", id);
+        try {
+            // TODO add your handling code here:
+            Connection koneksi = conn.getConn();
+            Statement query = koneksi.createStatement();
+            query.executeUpdate(sql);
+            getTableObat();
+            updateCombo();
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_deleteActionPerformed
+
+    private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
+        String id, nama, merk, harga, stok;
+        id = idObatEdit.getText();
+        nama = namaObatEdit.getText();
+        merk = merkObatEdit.getText();
+        harga = hargaObatEdit.getText();
+        stok = stokObatEdit.getText();
+        Integer.parseInt(stok);
+        Integer.parseInt(harga);
+        String sql = String.format("UPDATE obat SET nama = '%s', merk = '%s', harga = '%s', stok = '%s' WHERE id = '%s'",nama, merk, harga, stok, id);
+        try {
+            // TODO add your handling code here:
+            Connection koneksi = conn.getConn();
+            Statement query = koneksi.createStatement();
+            query.executeUpdate(sql);
+            getTableObat();
+            combo.removeAllItems();
+            combo.addItem("Buka untuk Memilih");
+            combo.removeAllItems();
+            updateCombo();
+        } catch (SQLException ex) {
+            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }//GEN-LAST:event_updateActionPerformed
+
+    private void stokObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stokObatEditActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_stokObatEditActionPerformed
+
+    private void merkObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_merkObatEditActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_merkObatEditActionPerformed
+
+    private void namaObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_namaObatEditActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_namaObatEditActionPerformed
+
+    private void idObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idObatEditActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_idObatEditActionPerformed
 
     private void tambahObatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tambahObatActionPerformed
         try {
@@ -741,121 +957,18 @@ public class mainViews extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_tambahObatActionPerformed
 
-    private void namaObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_namaObatEditActionPerformed
+    private void namaObatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_namaObatActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_namaObatEditActionPerformed
+    }//GEN-LAST:event_namaObatActionPerformed
 
-    private void merkObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_merkObatEditActionPerformed
+    private void idObatKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_idObatKeyTyped
         // TODO add your handling code here:
-    }//GEN-LAST:event_merkObatEditActionPerformed
+        validasiTambah.setVisible(false);
+    }//GEN-LAST:event_idObatKeyTyped
 
-    private void stokObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stokObatEditActionPerformed
+    private void idObatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idObatActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_stokObatEditActionPerformed
-
-    private void tambahOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tambahOrderActionPerformed
-        // TODO add your handling code here:
-        try {
-            // TODO add your handling code here:
-            Connection koneksi = conn.getConn();
-            String  id, qty, total;
-            Statement query = koneksi.createStatement();
-            id = idObat.getText();
-            qty = qtyObat.getText();
-            total = total_.getText();
-            Integer.parseInt(qty);
-            String sql = String.format("INSERT INTO orders (id_obat, tanggal, total, qty) values ('%s', now(), '%s', '%s')", id, total, qty);
-            query.execute(sql);
-            getTableOrder();
-            updateCombo();
-            emptyOrder();
-        } catch (SQLException ex) {
-            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_tambahOrderActionPerformed
-
-    private void comboItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_comboItemStateChanged
-        try {
-            // TODO add your handling code here:
-            Connection koneksi = conn.getConn();
-            Statement query = koneksi.createStatement();
-            String item = combo.getSelectedItem().toString();
-            String sql = String.format("SELECT * FROM obat where nama = '%s'", item);
-            result = query.executeQuery(sql);
-            while(result.next()){
-                id_obat.setText(result.getString("id"));
-                nama_obat.setText(result.getString("nama"));
-                merk_obat.setText(result.getString("merk"));
-                harga.setText(result.getString("harga"));
-            }
-                    } catch (SQLException ex) {
-            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_comboItemStateChanged
-
-    private void comboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_comboActionPerformed
-
-//Get Data Dari Dropdown (Belum Berhasil)
-
-    private void comboPopupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent evt) {//GEN-FIRST:event_comboPopupMenuWillBecomeInvisible
-
-    }//GEN-LAST:event_comboPopupMenuWillBecomeInvisible
-
-    private void jTabbedPane1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTabbedPane1KeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTabbedPane1KeyPressed
-
-    private void idObatEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idObatEditActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_idObatEditActionPerformed
-
-    private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
-        String id, nama, merk, harga, stok;
-        id = idObatEdit.getText();
-        nama = namaObatEdit.getText();
-        merk = merkObatEdit.getText();
-        harga = hargaObatEdit.getText();
-        stok = stokObatEdit.getText();
-        Integer.parseInt(stok);
-        Integer.parseInt(harga);
-        String sql = String.format("UPDATE obat SET nama = '%s', merk = '%s', harga = '%s', stok = '%s' WHERE id = '%s'",nama, merk, harga, stok, id);
-        try {
-            // TODO add your handling code here:
-            Connection koneksi = conn.getConn();
-            Statement query = koneksi.createStatement();
-            query.executeUpdate(sql);
-            getTableObat();
-            updateCombo();
-        } catch (SQLException ex) {
-            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-       
-        
-    }//GEN-LAST:event_updateActionPerformed
-
-    private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
-        // TODO add your handling code here:
-        String id;
-        id = idObatEdit.getText();
-        String sql = String.format("DELETE FROM obat WHERE id = '%s'", id);
-        try {
-            // TODO add your handling code here:
-            Connection koneksi = conn.getConn();
-            Statement query = koneksi.createStatement();
-            query.executeUpdate(sql);
-            getTableObat();
-            updateCombo();
-        } catch (SQLException ex) {
-            Logger.getLogger(mainViews.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_deleteActionPerformed
-
-    private void hargaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hargaActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_hargaActionPerformed
+    }//GEN-LAST:event_idObatActionPerformed
 
     /**
      * @param args the command line arguments
@@ -887,9 +1000,7 @@ public class mainViews extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new mainViews().setVisible(true);
-                harga.setVisible(false);
-                
+                new mainViews().setVisible(true);                
             }
         });
     }
@@ -897,7 +1008,7 @@ public class mainViews extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> combo;
     private javax.swing.JButton delete;
-    private static javax.swing.JTextField harga;
+    private javax.swing.JTextField harga;
     private javax.swing.JTextField hargaObat;
     private javax.swing.JTextField hargaObatEdit;
     private javax.swing.JTextField idObat;
@@ -929,6 +1040,7 @@ public class mainViews extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JLabel labelStok;
     private javax.swing.JTextField merkObat;
     private javax.swing.JTextField merkObatEdit;
     private javax.swing.JTextField merk_obat;
@@ -937,6 +1049,7 @@ public class mainViews extends javax.swing.JFrame {
     private javax.swing.JTextField nama_obat;
     private javax.swing.JTextField qtyObat;
     private javax.swing.JTextField stokObatEdit;
+    private javax.swing.JTextField stok_;
     private javax.swing.JTable tableBarang;
     private javax.swing.JTable tableEdit;
     private javax.swing.JTable tableOrder;
